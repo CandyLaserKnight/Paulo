@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"myapp/handlers"
 	"os"
 
 	"github.com/candylaserknight/paulo"
@@ -22,11 +23,16 @@ func initApplication() *application {
 
 	pau.AppName = "myapp"
 
-	pau.InfoLog.Println("Debug is set to", pau.Debug)
-
-	app := &application{
+	myHandlers := &handlers.Handlers{
 		App: pau,
 	}
+
+	app := &application{
+		App:      pau,
+		Handlers: myHandlers,
+	}
+
+	app.App.Routes = app.routes()
 
 	return app
 }

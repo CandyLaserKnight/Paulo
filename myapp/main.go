@@ -1,9 +1,13 @@
 package main
 
-import "github.com/candylaserknight/paulo"
+import (
+	"github.com/candylaserknight/paulo"
+	"myapp/handlers"
+)
 
 type application struct {
-	App *paulo.Paulo
+	App      *paulo.Paulo
+	Handlers *handlers.Handlers
 }
 
 func main() {

@@ -1,6 +1,7 @@
 # github.com/candylaserknight/paulo v0.0.0-00010101000000-000000000000 => ../Paulo
 ## explicit; go 1.19
 github.com/candylaserknight/paulo
+github.com/candylaserknight/paulo/render
 # github.com/go-chi/chi/v5 v5.0.8
 ## explicit; go 1.14
 github.com/go-chi/chi/v5

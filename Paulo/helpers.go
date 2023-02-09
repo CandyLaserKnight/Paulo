@@ -17,9 +17,19 @@ func (c *Paulo) CreateDirIfNotExist(path string) error {
 }
 
 func (c *Paulo) CreateFileIfNotExists(path string) error {
+	//var _, err = os.Stat(path)
+	//errors.Is(err, os.ErrNotExist)
+	//{
+	//var file, err = os.Create(path)
+	//if err != nil {
+	//	return err
+	//}
+
+	//defer func(file *os.File) {
+	//	_ = file.Close()
+	//}(file)
 	var _, err = os.Stat(path)
-	errors.Is(err, os.ErrNotExist)
-	{
+	if os.IsNotExist(err) {
 		var file, err = os.Create(path)
 		if err != nil {
 			return err
