@@ -2,6 +2,7 @@ package paulo
 
 import (
 	"fmt"
+	"github.com/CloudyKit/jet/v6"
 	"github.com/candylaserknight/paulo/render"
 	"github.com/go-chi/chi/v5"
 	"github.com/joho/godotenv"
@@ -23,6 +24,7 @@ type Paulo struct {
 	RootPath string
 	Routes   *chi.Mux
 	Render   *render.Render
+	JetViews *jet.Set
 	config   config
 }
 
@@ -31,18 +33,18 @@ type config struct {
 	renderer string
 }
 
-func (c *Paulo) New(rootPath string) error {
+func (p *Paulo) New(rootPath string) error {
 	pathConfig := initPaths{
 		rootPath:    rootPath,
 		folderNames: []string{"handlers", "migrations", "views", "data", "public", "tmp", "logs", "middleware"},
 	}
 
-	err := c.Init(pathConfig)
+	err := p.Init(pathConfig)
 	if err != nil {
 		return err
 	}
 
-	err = c.checkDotEnv(rootPath)
+	err = p.checkDotEnv(rootPath)
 	if err != nil {
 		return err
 	}
@@ -54,28 +56,34 @@ func (c *Paulo) New(rootPath string) error {
 	}
 
 	// create loggers
-	infoLog, errorLog := c.startLoggers()
-	c.InfoLog = infoLog
-	c.ErrorLog = errorLog
-	c.Debug, _ = strconv.ParseBool(os.Getenv("DEBUG"))
-	c.Version = version
-	c.RootPath = rootPath
-	c.Routes = c.routes().(*chi.Mux)
+	infoLog, errorLog := p.startLoggers()
+	p.InfoLog = infoLog
+	p.ErrorLog = errorLog
+	p.Debug, _ = strconv.ParseBool(os.Getenv("DEBUG"))
+	p.Version = version
+	p.RootPath = rootPath
+	p.Routes = p.routes().(*chi.Mux)
 
-	c.config = config{
+	p.config = config{
 		port:     os.Getenv("PORT"),
 		renderer: os.Getenv("RENDERER"),
 	}
 
-	c.Render = c.createRenderer(c)
+	var views = jet.NewSet(
+		jet.NewOSFileSystemLoader(fmt.Sprintf("%s/views", rootPath)),
+		jet.InDevelopmentMode(),
+	)
+
+	p.JetViews = views
+	p.createRenderer()
 	return nil
 }
 
-func (c *Paulo) Init(p initPaths) error {
-	root := p.rootPath
-	for _, path := range p.folderNames {
+func (p *Paulo) Init(c initPaths) error {
+	root := c.rootPath
+	for _, path := range c.folderNames {
 		// create folder if it doesn't exist
-		err := c.CreateDirIfNotExist(root + "/" + path)
+		err := p.CreateDirIfNotExist(root + "/" + path)
 		if err != nil {
 			return err
 		}
@@ -84,28 +92,28 @@ func (c *Paulo) Init(p initPaths) error {
 }
 
 // ListenAndServe starts the web server
-func (c *Paulo) ListenAndServe() {
+func (p *Paulo) ListenAndServe() {
 	srv := &http.Server{
 		Addr:         fmt.Sprintf(":%s", os.Getenv("PORT")),
-		ErrorLog:     c.ErrorLog,
-		Handler:      c.Routes,
+		ErrorLog:     p.ErrorLog,
+		Handler:      p.Routes,
 		IdleTimeout:  30 * time.Second,
 		ReadTimeout:  30 * time.Second,
 		WriteTimeout: 600 * time.Second,
 	}
-	c.InfoLog.Printf("Listening on port %s", os.Getenv("PORT"))
+	p.InfoLog.Printf("Listening on port %s", os.Getenv("PORT"))
 	err := srv.ListenAndServe()
-	c.ErrorLog.Fatal(err)
+	p.ErrorLog.Fatal(err)
 }
-func (c *Paulo) checkDotEnv(path string) error {
-	err := c.CreateFileIfNotExists(fmt.Sprintf("%s/.env", path))
+func (p *Paulo) checkDotEnv(path string) error {
+	err := p.CreateFileIfNotExists(fmt.Sprintf("%s/.env", path))
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (c *Paulo) startLoggers() (*log.Logger, *log.Logger) {
+func (p *Paulo) startLoggers() (*log.Logger, *log.Logger) {
 	var infoLog *log.Logger
 	var errorLog *log.Logger
 
@@ -115,12 +123,13 @@ func (c *Paulo) startLoggers() (*log.Logger, *log.Logger) {
 	return infoLog, errorLog
 }
 
-func (c *Paulo) createRenderer(pau *Paulo) *render.Render {
+func (p *Paulo) createRenderer() {
 	myRenderer := render.Render{
-		Renderer: pau.config.renderer,
-		RootPath: pau.RootPath,
-		Port:     pau.config.port,
+		Renderer: p.config.renderer,
+		RootPath: p.RootPath,
+		Port:     p.config.port,
+		JetViews: p.JetViews,
 	}
 
-	return &myRenderer
+	p.Render = &myRenderer
 }

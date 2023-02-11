@@ -5,7 +5,7 @@ import (
 	"os"
 )
 
-func (c *Paulo) CreateDirIfNotExist(path string) error {
+func (p *Paulo) CreateDirIfNotExist(path string) error {
 	const mode = 0755
 	if _, err := os.Stat(path); errors.Is(err, os.ErrNotExist) {
 		err := os.Mkdir(path, mode)
@@ -16,7 +16,7 @@ func (c *Paulo) CreateDirIfNotExist(path string) error {
 	return nil
 }
 
-func (c *Paulo) CreateFileIfNotExists(path string) error {
+func (p *Paulo) CreateFileIfNotExists(path string) error {
 	//var _, err = os.Stat(path)
 	//errors.Is(err, os.ErrNotExist)
 	//{

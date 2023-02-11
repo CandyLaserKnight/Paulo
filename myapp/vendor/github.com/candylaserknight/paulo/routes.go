@@ -6,11 +6,11 @@ import (
 	"net/http"
 )
 
-func (c *Paulo) routes() http.Handler {
+func (p *Paulo) routes() http.Handler {
 	mux := chi.NewRouter()
 	mux.Use(middleware.RequestID)
 	mux.Use(middleware.RealIP)
-	if c.Debug {
+	if p.Debug {
 		mux.Use(middleware.Logger)
 	}
 	mux.Use(middleware.Recoverer)
