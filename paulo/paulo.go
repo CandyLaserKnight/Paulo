@@ -96,6 +96,10 @@ func (p *Paulo) New(rootPath string) error {
 			domain:   os.Getenv("COOKIE_DOMAIN"),
 		},
 		sessionType: os.Getenv("SESSION_TYPE"),
+		database: databaseConfig{
+			database: os.Getenv("DATABASE_TYPE"),
+			dsn:      p.BuildDSN(),
+		},
 	}
 
 	// create session
@@ -142,6 +146,9 @@ func (p *Paulo) ListenAndServe() {
 		ReadTimeout:  30 * time.Second,
 		WriteTimeout: 600 * time.Second,
 	}
+
+	defer p.DB.Pool.Close()
+
 	p.InfoLog.Printf("Listening on port %s", os.Getenv("PORT"))
 	err := srv.ListenAndServe()
 	p.ErrorLog.Fatal(err)
@@ -170,6 +177,7 @@ func (p *Paulo) createRenderer() {
 		RootPath: p.RootPath,
 		Port:     p.config.port,
 		JetViews: p.JetViews,
+		Session:  p.Session,
 	}
 
 	p.Render = &myRenderer
